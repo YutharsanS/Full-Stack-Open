@@ -1,7 +1,16 @@
 const express = require('express')
+const morgan = require('morgan')
 const app = express()
 
 app.use(express.json())
+
+morgan.token('content', (request, response) => {
+    const body = request.body
+    return JSON.stringify(body)
+})
+
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :content'))
+
 
 const PORT = 3001
 
