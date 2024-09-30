@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import Filter from "./components/Filter";
 import PersonalForm from "./components/PersonalForm"
 import Persons from "./components/Persons"
+import Notification from './components/Notification';
 import axios from 'axios';
 import contact_service from './service/contact'
+import './index.css';
 
 function App() {
   const [persons, setPersons] = useState([])
@@ -11,6 +13,8 @@ function App() {
   const [newName, setNewName] = useState('');
   const [newNumber, setNewNumber] = useState('');
   const [newSearch, setNewSearch] = useState('');
+  const [notification, setNotification] = useState('');
+  const [notificationStatus, setNotificationStatus] = useState('notification-pass')
 
   //fetching data from the server
   const hook = () => {
@@ -46,8 +50,12 @@ function App() {
             changeSearchContent(updatedPersons, newSearch);
             setNewName('');
             setNewNumber('');
+            setNotification(`${response.name} was updated`);
+            setTimeout(() => {
+              setNotification(null)
+            }, 3000)
           }).catch(error => {
-            console.log('Error when updating', error)
+            showNotification( `Information about ${personToDelete.name} is already removed from server`, true)
           })
       }
     } else {
@@ -56,15 +64,36 @@ function App() {
         contact_service.addEntry(new_entry).then(
         response => {
           const updatedPersons = persons.concat(response);
-          setPersons(updatedPersons);
-          changeSearchContent(updatedPersons, newSearch);
-          setNewName('');
-          setNewNumber('');
+            setPersons(updatedPersons);
+            changeSearchContent(updatedPersons, newSearch);
+            setNewName('');
+            setNewNumber('');
+            setNotification(`${response.name} was added`)
+            setTimeout(() => {
+            setNotification(null)
+          }, 3000)
         }
       ).catch(error => {
         console.log('Error when inserting', error)
       })
     }
+  }
+
+  const deleteOnPressed = (id) => {
+
+    const personToDelete = persons.find((person) => person.id === id)
+
+    contact_service
+      .deleteEntry(id)
+      .then((response) => {
+        const updatedPersons = persons.filter((person) => person.id != id)
+        setPersons(updatedPersons)
+        changeSearchContent(updatedPersons, newSearch)
+       }
+    ).catch((error) => {
+      showNotification( `Information about ${personToDelete.name} is already removed from server`, true)
+      }
+    )
   }
 
   const nameOnChanged = (event) => {
@@ -96,22 +125,19 @@ function App() {
     }
   }
 
-  const deleteOnPressed = (id) => {
-    contact_service
-      .deleteEntry(id)
-      .then((response) => {
-        const updatedPersons = persons.filter((person) => person.id != id)
-        setPersons(updatedPersons)
-        changeSearchContent(updatedPersons, newSearch)
-       }
-    ).catch( (error) =>
-        console.log('error deleting the element', error)
-      )
+  const showNotification = (message, isError = false) => {
+    setNotification(message)
+    setNotificationStatus(isError ? 'notification-fail' : 'notification-pass')
+    setTimeout(() => {
+      setNotification(null)
+      setNotificationStatus('notification-pass')
+    }, 3000)
   }
 
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={notification} status={notificationStatus} />
       <Filter handler={searchOnChanged} value={newSearch} />
       <h3>Add a new</h3>
       <PersonalForm name={newName} nameHandler={nameOnChanged} number={newNumber} numberHandler={numberOnChanged} submitHandler={onSubmit} />
