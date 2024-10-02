@@ -36,7 +36,7 @@ function App() {
     const index = persons.findIndex((person) => person.name === newName)
 
     if(index != -1){
-      const shouldUpdate = confirm(`${newName} is already added to phonebook, replace the old number with new one?`);
+      const shouldUpdate = confirm(`${newName} is already added to phone book, replace the old number with new one?`);
 
       if (shouldUpdate) {
         const person = persons[index]
@@ -55,7 +55,7 @@ function App() {
               setNotification(null)
             }, 3000)
           }).catch(error => {
-            showNotification( `Information about ${personToDelete.name} is already removed from server`, true)
+            console.log('Error during updating', error)
           })
       }
     } else {

@@ -1,8 +1,11 @@
 const express = require('express')
 const morgan = require('morgan')
+const cors = require('cors')
 const app = express()
 
 app.use(express.json())
+app.use(cors())
+app.use(express.static('dist'))
 
 morgan.token('content', (request, response) => {
     const body = request.body
@@ -102,6 +105,14 @@ app.get('/api/persons/:id', (request, response) => {
     } else {
         response.status(404).end()
     }
+})
+
+app.put('/api/persons/:id', (request, response) => {
+    const  body = request.body
+    const id = request.params.id
+    const personToUpdate = persons.findIndex((person) => person.id === id)
+    persons[personToUpdate] = body
+    response.json(persons[personToUpdate])
 })
 
 app.delete('/api/persons/:id', (request, response) => {
