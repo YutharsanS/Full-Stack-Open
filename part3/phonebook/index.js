@@ -20,6 +20,18 @@ morgan.token('content', (request, response) => {
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :content'))
 
+const errorHandler = (error, request, response, next) => {
+    console.log(error.message)
+
+    if (error.name === 'CastError') {
+        response.status(500).end("id malformatted")
+    } else if (error.name === 'ValidationError') {
+        response(500).end("Validation Error")
+    }
+
+    next(error)
+}
+
 
 app.get('/', (request, response) => {
     response.send("<h1>Persons</h1>")
@@ -29,7 +41,7 @@ app.get('/api/persons', (request, response) => {
     Contact.find({}).then(res => response.json(res))
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
     const body = request.body
 
     const contact = new Contact({
@@ -41,7 +53,7 @@ app.post('/api/persons', (request, response) => {
         (savedNote) => {
             response.json(savedNote)
         }
-    )
+    ).catch(error => next(error))
 })
 
 app.get('/info', (request, response) => {
@@ -54,17 +66,22 @@ app.get('/info', (request, response) => {
     response.send(result)
 })
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
     const id = request.params.id
-    const person = Contact.findById(request.params.id)
-        .then(res => response.json(res))
+    Contact.findById(request.params.id)
+        .then(res => {
+            if (res) {
+                response.json(res)
+            } else {
+                response.status(404).end(`${id} not found`)
+            }
+        })
         .catch(error => {
-            console.log(error)
-            response.status(404).end()
+            next(error)
         })
 })
 
-app.put('/api/persons/:id', (request, response) => {
+app.put('/api/persons/:id', (request, response, next) => {
     const  body = request.body
     const id = request.params.id
     const newContact = {
@@ -72,21 +89,29 @@ app.put('/api/persons/:id', (request, response) => {
         number: body.number
     }
 
-    Contact.findByIdAndUpdate(id, newContact, {new: true, runValidators: true}).then(res => response.json(res))
+    Contact.findByIdAndUpdate(id, newContact, { new: true, runValidators: true }).then(res => {
+        if (res) {
+           response.json(res)
+        } else {
+            response.status(404).end(`${id} not found`)
+        }
+    }).catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', async (request, response) => {
+app.delete('/api/persons/:id', async (request, response, next) => {
     const id = request.params.id
     Contact.findByIdAndDelete(id).then(
         deletion => {
             if (deletion) {
                 response.json(`deleted ${id}`)
             } else {
-                response.json(`$(id) not found`)
+                response.status(404).end(`${id} not found`)
             }
         }
-    )
+    ).catch(error => next(error))
 })
+
+app.use(errorHandler)
 
 app.listen(PORT, () => {
     console.log(`Server runs on ${PORT}`)
