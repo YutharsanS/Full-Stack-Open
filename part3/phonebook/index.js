@@ -1,7 +1,13 @@
+require('dotenv').config()
+const Contact = require('./models/contact')
+
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
+const { default: mongoose } = require('mongoose')
 const app = express()
+
+const PORT = process.env.PORT
 
 app.use(express.json())
 app.use(cors())
@@ -15,75 +21,27 @@ morgan.token('content', (request, response) => {
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :content'))
 
 
-const PORT = 3001
-
-let persons = [
-    {
-      "id": "1",
-      "name": "Arto Hellas",
-      "number": "040-123456"
-    },
-    {
-      "id": "2",
-      "name": "Ada Lovelace",
-      "number": "39-44-5323523"
-    },
-    {
-      "id": "3",
-      "name": "Dan Abramov",
-      "number": "12-43-234345"
-    },
-    {
-      "id": "4",
-      "name": "Mary Poppendieck",
-      "number": "39-23-6423122"
-    }
-]
-
-const generateId = () => Math.floor(Math.random() * 10000)
-
 app.get('/', (request, response) => {
     response.send("<h1>Persons</h1>")
 })
 
 app.get('/api/persons', (request, response) => {
-    response.json(persons)
+    Contact.find({}).then(res => response.json(res))
 })
 
 app.post('/api/persons', (request, response) => {
     const body = request.body
 
-    if (!body.name) {
-        return response.status(400).json(
-            {
-                error: "Name is required"
-            }
-        )
-    } else if (!body.number) {
-        return response.status(400).json(
-            {
-                error: "Number is required"
-            }
-        )
-    }
-
-    if (persons.map((person) => person.name).findIndex((name) => name === body.name) !== -1) {
-        return response.status(400).json(
-            {
-                error: "Name must be unique"
-            }
-        )
-    }
-
-    const id = generateId()
-    const new_entry = {
-        id: id,
+    const contact = new Contact({
         name: body.name,
         number: body.number
-    }
+    })
 
-    persons = persons.concat(new_entry)
-    response.json(new_entry)
+    contact.save().then(
+        (savedNote) => {
+            response.json(savedNote)
+        }
+    )
 })
 
 app.get('/info', (request, response) => {
@@ -98,27 +56,36 @@ app.get('/info', (request, response) => {
 
 app.get('/api/persons/:id', (request, response) => {
     const id = request.params.id
-    const person = persons.find((person) => person.id === id)
-
-    if (person) {
-        response.json(person)
-    } else {
-        response.status(404).end()
-    }
+    const person = Contact.findById(request.params.id)
+        .then(res => response.json(res))
+        .catch(error => {
+            console.log(error)
+            response.status(404).end()
+        })
 })
 
 app.put('/api/persons/:id', (request, response) => {
     const  body = request.body
     const id = request.params.id
-    const personToUpdate = persons.findIndex((person) => person.id === id)
-    persons[personToUpdate] = body
-    response.json(persons[personToUpdate])
+    const newContact = {
+        name: body.name,
+        number: body.number
+    }
+
+    Contact.findByIdAndUpdate(id, newContact, {new: true, runValidators: true}).then(res => response.json(res))
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', async (request, response) => {
     const id = request.params.id
-    persons = persons.filter((person) => person.id != id)
-    response.send(`Note with id ${id} is deleted from the server`)
+    Contact.findByIdAndDelete(id).then(
+        deletion => {
+            if (deletion) {
+                response.json(`deleted ${id}`)
+            } else {
+                response.json(`$(id) not found`)
+            }
+        }
+    )
 })
 
 app.listen(PORT, () => {
