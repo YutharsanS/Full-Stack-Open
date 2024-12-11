@@ -24,9 +24,9 @@ const errorHandler = (error, request, response, next) => {
     console.log(error.message)
 
     if (error.name === 'CastError') {
-        response.status(500).end("id malformatted")
+        response.status(500).send({ messsage: error.message })
     } else if (error.name === 'ValidationError') {
-        response(500).end("Validation Error")
+        response.status(500).send({ message: error.message})
     }
 
     next(error)
