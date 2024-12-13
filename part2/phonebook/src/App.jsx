@@ -75,6 +75,7 @@ function App() {
         }
       ).catch(error => {
         console.log('Error when inserting', error)
+        showNotification(error.response.data.message, true)
       })
     }
   }
