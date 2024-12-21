@@ -86,18 +86,24 @@ const blogWOUrl = {
     url: 'www.unexistent3.com'
 }
 
-const notesInDB = async () => {
+const blogsInDB = async () => {
     const blogs = await Blog.find({})
     return blogs.map(blog => blog.toJSON())
+}
+
+const validId = async () => {
+    const blogs = await blogsInDB()
+    return blogs[0].id
 }
 
 module.exports = {
     blogSingle,
     blogMultiple,
     blogNoDocs,
-    notesInDB,
+    blogsInDB,
     newBlog,
     blogWtLikes,
     blogWtTA,
-    blogWOUrl
+    blogWOUrl,
+    validId
 }
