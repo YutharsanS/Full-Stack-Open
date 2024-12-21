@@ -28,29 +28,48 @@ describe('get requests', () => {
 
 describe('post requests', () => {
     test('posting to /api/blogs', async () => {
-        const newBlog = {
-            title: 'Untitled',
-            author: 'Anonymous',
-            url: 'www.unexistent.com',
-            likes: 0
-        }
 
         await api
             .post('/api/blogs')
-            .send(newBlog)
+            .send(test_helper.newBlog)
             .expect(201)
             .expect('Content-Type', /application\/json/)
 
-        const currentBlogs= await test_helper.notesInDB()
+        const currentBlogs = await test_helper.notesInDB()
         const initialBlogs = test_helper.blogMultiple
 
         assert.strictEqual(currentBlogs.length, initialBlogs.length + 1)
         const contents = currentBlogs.map(blog => blog.title)
         assert(contents.includes('Untitled'))
     })
+
+    test('post without likes', async () => {
+        await api
+            .post('/api/blogs')
+            .send(test_helper.blogWtLikes)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+
+        const blogs = await test_helper.notesInDB()
+        const blog = blogs[blogs.length - 1]
+        assert.strictEqual(blog.likes, test_helper.blogWtLikes.likes || 0)
+    })
+
+    test('posts without author and title', async () => {
+        await api
+            .post('/api/blogs')
+            .send(test_helper.blogWtTA)
+            .expect(400)
+    })
+
+    test('posts with only url', async () => {
+        await api
+            .post('/api/blogs')
+            .send(test_helper.blogWOUrl)
+            .expect(400)
+    })
 })
 
-
-after(async () => {
+after(() => {
     mongoose.connection.close()
 })

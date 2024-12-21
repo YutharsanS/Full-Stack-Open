@@ -64,6 +64,28 @@ const blogMultiple = [
 
 const blogNoDocs = []
 
+const newBlog = {
+    title: 'Untitled',
+    author: 'Anonymous',
+    url: 'www.unexistent.com',
+    likes: 1
+}
+
+const blogWtLikes = {
+    title: 'Untitled1',
+    author: 'Anonymous1',
+    url: 'www.unexistent1.com',
+}
+
+const blogWtTA = {
+    url: 'www.unexistent2.com',
+    likes: 2
+}
+
+const blogWOUrl = {
+    url: 'www.unexistent3.com'
+}
+
 const notesInDB = async () => {
     const blogs = await Blog.find({})
     return blogs.map(blog => blog.toJSON())
@@ -73,5 +95,9 @@ module.exports = {
     blogSingle,
     blogMultiple,
     blogNoDocs,
-    notesInDB
+    notesInDB,
+    newBlog,
+    blogWtLikes,
+    blogWtTA,
+    blogWOUrl
 }
