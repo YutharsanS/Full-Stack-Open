@@ -62,6 +62,12 @@ const blogMultiple = [
     }
 ]
 
+const initialUsers = [{
+    username: 'yutharsanS',
+    name: 'Yutharsan',
+    password: '12345'
+}]
+
 const blogNoDocs = []
 
 const newBlog = {
@@ -105,5 +111,6 @@ module.exports = {
     blogWtLikes,
     blogWtTA,
     blogWOUrl,
-    validId
+    validId,
+    initialUsers
 }
