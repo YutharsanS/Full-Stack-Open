@@ -1,8 +1,5 @@
-const jwt = require('jsonwebtoken')
-
 const blogRouter = require('express').Router()
 const Blog = require('../models/blog')
-const User = require('../models/user')
 
 blogRouter.get('/', (request, response, next) => {
     Blog
@@ -20,14 +17,7 @@ blogRouter.get('/', (request, response, next) => {
 blogRouter.post('/', async (request, response, next) => {
     const body = request.body
 
-    // get the token from the request and verify it
-    const decodedToken = jwt.verify(request.token, process.env.SECRET)
-
-    if (!decodedToken.id) {
-        return response.status(401).json({ error: 'token invalid' })
-    }
-
-    const user = await User.findById(decodedToken.id)
+    const user = request.user
 
     const blog = new Blog({
         title: body.title,
@@ -73,8 +63,16 @@ blogRouter.get('/:id', async (request, response) => {
 })
 
 blogRouter.delete('/:id', async (request, response) => {
+
     const id = request.params.id
-    await Blog.findOneAndDelete(id)
+    const user = request.user
+
+    const blog = await Blog.findById(id)
+    if (!(blog.user.toString() === user.id.toString())) {
+        return response.status(401).json( { error: 'access denied' })
+    }
+
+    await Blog.findByIdAndDelete(id)
 
     response.status(204).end(`blog ${id} is deleted from database`)
 })
