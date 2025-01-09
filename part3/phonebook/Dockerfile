@@ -1,5 +1,5 @@
 # Base image is node 20
-FROM node:20-alpine
+FROM node:20 AS build-step
 # Defining work directory
 WORKDIR /usr/app/src
 # Exposing the port
