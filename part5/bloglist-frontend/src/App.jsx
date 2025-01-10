@@ -26,14 +26,22 @@ const App = () => {
     }
   }
 
+  const handleLogout = async (event) => {
+    event.preventDefault()
+
+    window.localStorage.removeItem('blogUserToken')
+    setUser(null)
+  }
+
   const blogsForm = () => (
-    <div>
+    <form onSubmit={handleLogout}>
       <h2>blogs</h2>
       <p>Logged in as {user.name} </p>
+      <button type="submit">logout</button><br/>
       {blogs.map(blog =>
         <Blog key={blog.id} blog={blog} />
       )}
-    </div>
+    </form>
   )
 
   const loginForm = () => (
